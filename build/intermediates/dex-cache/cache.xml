@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        jar="/Users/filipe/Android Projects/GammaWorks/Banners/app/build/intermediates/exploded-aar/Banners/banners/unspecified/jars/classes.jar"
+        jumboMode="false"
+        revision="23.0.0 rc2"
+        sha1="527274b031c857cfa35e595b89fd679b4e28391f">
+        <dex dex="/Users/filipe/Android Projects/GammaWorks/Banners/app/build/intermediates/pre-dexed/debug/classes-ffe0e4303ab56da51d0765f9a178527b22cccc40.jar" />
+    </item>
+
+</items>
