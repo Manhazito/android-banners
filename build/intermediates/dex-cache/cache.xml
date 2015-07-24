@@ -2,11 +2,39 @@
 <items version="2" >
 
     <item
-        jar="/Users/filipe/Android Projects/GammaWorks/Banners/app/build/intermediates/exploded-aar/Banners/banners/unspecified/jars/classes.jar"
+        jar="/Applications/AndroidSDK/extras/android/m2repository/com/android/support/support-annotations/22.2.1/support-annotations-22.2.1.jar"
         jumboMode="false"
-        revision="23.0.0 rc2"
-        sha1="527274b031c857cfa35e595b89fd679b4e28391f">
-        <dex dex="/Users/filipe/Android Projects/GammaWorks/Banners/app/build/intermediates/pre-dexed/debug/classes-ffe0e4303ab56da51d0765f9a178527b22cccc40.jar" />
+        revision="22.0.1"
+        sha1="61a0ff5c29295ec56d7e0bd3d25d95dbf71b4b2b">
+        <dex dex="/Users/filipe/Android Projects/GammaWorks/android-banners/app/build/intermediates/pre-dexed/debug/support-annotations-22.2.1-fac8597c085a7cdd6b7a9a8f9c01253a5d03fa05.jar" />
+    </item>
+    <item
+        jar="/Users/filipe/Android Projects/GammaWorks/android-banners/app/build/intermediates/exploded-aar/com.android.support/support-v4/22.2.1/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="f8efd0096475e0daf054267b61544e10dc776503">
+        <dex dex="/Users/filipe/Android Projects/GammaWorks/android-banners/app/build/intermediates/pre-dexed/debug/classes-108761bb7f9b07c2bac06f5523d811580c367555.jar" />
+    </item>
+    <item
+        jar="/Users/filipe/Android Projects/GammaWorks/android-banners/app/build/intermediates/exploded-aar/android-banners/banners/unspecified/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="9b061cd65e955be8dc2cbca45dd30fd369793805">
+        <dex dex="/Users/filipe/Android Projects/GammaWorks/android-banners/app/build/intermediates/pre-dexed/debug/classes-34e89d9a7c378e43b97e8c0060398bb09a145cf4.jar" />
+    </item>
+    <item
+        jar="/Users/filipe/Android Projects/GammaWorks/android-banners/app/build/intermediates/exploded-aar/com.android.support/support-v4/22.2.1/jars/libs/internal_impl-22.2.1.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="c471eaaba13ff64f6e0383d1c30a9cdc9a97efeb">
+        <dex dex="/Users/filipe/Android Projects/GammaWorks/android-banners/app/build/intermediates/pre-dexed/debug/internal_impl-22.2.1-930c11ca626b53c3d3db3b8358e969037d6ca90b.jar" />
+    </item>
+    <item
+        jar="/Users/filipe/Android Projects/GammaWorks/android-banners/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/22.2.1/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="4486e953d1f35f8ccab098b1dd67146366d5f731">
+        <dex dex="/Users/filipe/Android Projects/GammaWorks/android-banners/app/build/intermediates/pre-dexed/debug/classes-1db75a1853e13576b3e6d8c703fefc2635ff9a3e.jar" />
     </item>
 
 </items>

@@ -46,7 +46,7 @@ public class Banners extends View {
     private int mDislocation = 0;
     private int mIndex = 0;
     private int mNextIndex = 0;
-    private final Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint mIndicatorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private float mIndicatorRadius;
     private float mIndicatorY;
     private float mIndicatorStartX;
@@ -61,9 +61,11 @@ public class Banners extends View {
         super(context, attrs);
 
         mBitmapList.add(BitmapFactory.decodeResource(context.getResources(), R.drawable.no_banners));
+        mBitmapList.add(BitmapFactory.decodeResource(context.getResources(), R.drawable.no_banners));
+        mBitmapList.add(BitmapFactory.decodeResource(context.getResources(), R.drawable.no_banners));
 
-        mPaint.setStrokeWidth(2f);
-        mPaint.setColor(mIndicatorColor);
+        mIndicatorPaint.setStrokeWidth(2f);
+        mIndicatorPaint.setColor(mIndicatorColor);
 
         mFlingDetector = new GestureDetector(context, new FlingDetector());
     }
@@ -145,8 +147,7 @@ public class Banners extends View {
         int width = getWidth() - getPaddingLeft() - getPaddingRight();
         int numberOfBmp;
 
-        if (isInEditMode()) numberOfBmp = 5;
-        else numberOfBmp = mBitmapList.size();
+        numberOfBmp = mBitmapList.size();
 
         mIndicatorRadius = (height / 50);
         mIndicatorXInterval = 2 * mIndicatorRadius + 2 * mIndicatorRadius;
@@ -166,28 +167,18 @@ public class Banners extends View {
             int measuredWidth;
             int measuredHeight;
 
-//            Log.w(TAG, "Requested W : H - " + widthSize + " : " + heightSize);
-//            Log.w(TAG, "Image W : H - " + mBitmapList.get(mIndex).getWidth() + " : " + mBitmapList.get(mIndex).getHeight());
-//            Log.w(TAG, "Image Aspect Ratio: " + aspectRatio);
-
             if (widthMode == MeasureSpec.EXACTLY) {
-//                Log.w(TAG, "W: Exactly");
                 measuredWidth = widthSize;
                 if (heightMode == MeasureSpec.EXACTLY) {
-//                    Log.w(TAG, "H: Exactly");
                     measuredHeight = heightSize;
                 } else {
-//                    Log.w(TAG, "H: Whatever or At Most");
                     measuredHeight = (int) Math.min(heightSize, (measuredWidth / aspectRatio));
                 }
             } else {
-//                Log.w(TAG, "W: Whatever or At Most");
                 if (heightMode == MeasureSpec.EXACTLY) {
-//                    Log.w(TAG, "H: Exactly");
                     measuredHeight = heightSize;
                     measuredWidth = (int) Math.min(widthSize, (measuredHeight * aspectRatio));
                 } else {
-//                    Log.w(TAG, "H: Whatever or At Most");
                     if (widthSize > heightSize * aspectRatio) {
                         measuredHeight = heightSize;
                         measuredWidth = (int) (measuredHeight * aspectRatio);
@@ -197,9 +188,6 @@ public class Banners extends View {
                     }
                 }
             }
-
-//            Log.w(TAG, "Canvas W : H - " + measuredWidth + " : " + measuredHeight);
-//            Log.w(TAG, "---");
 
             currentImageRect.set(0, 0, measuredWidth, measuredHeight);
             nextImageRect.set(measuredWidth, 0, 2 * measuredWidth, measuredHeight);
@@ -214,20 +202,19 @@ public class Banners extends View {
         super.onDraw(canvas);
 
         int numberOfBmp;
-        if (isInEditMode()) numberOfBmp = 5;
-        else numberOfBmp = mBitmapList.size();
+        numberOfBmp = mBitmapList.size();
 
         if (mBitmapList.get(mIndex) != null && mBitmapList.get(mNextIndex) != null) {
-            canvas.drawBitmap(mBitmapList.get(mIndex), null, currentImageRect, mPaint);
-            if (numberOfBmp > 1) canvas.drawBitmap(mBitmapList.get(mNextIndex), null, nextImageRect, mPaint);
+            canvas.drawBitmap(mBitmapList.get(mIndex), null, currentImageRect, mIndicatorPaint);
+            if (numberOfBmp > 1) canvas.drawBitmap(mBitmapList.get(mNextIndex), null, nextImageRect, mIndicatorPaint);
         }
 
         if (numberOfBmp > 1) {
             for (int i = 0; i < numberOfBmp; i++) {
-                if (i == mIndex) mPaint.setStyle(Paint.Style.FILL_AND_STROKE);
-                else mPaint.setStyle(Paint.Style.STROKE);
+                if (i == mIndex) mIndicatorPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+                else mIndicatorPaint.setStyle(Paint.Style.STROKE);
 
-                canvas.drawCircle(mIndicatorStartX + i * mIndicatorXInterval, mIndicatorY, mIndicatorRadius, mPaint);
+                canvas.drawCircle(mIndicatorStartX + i * mIndicatorXInterval, mIndicatorY, mIndicatorRadius, mIndicatorPaint);
             }
         }
     }
@@ -303,11 +290,21 @@ public class Banners extends View {
         }
     }
 
+    /**
+     * Sets the color of the banner indicators circles.
+     *
+     * @param indicatorColor The indicators color.
+     */
     public void setIndicatorColor(int indicatorColor) {
         this.mIndicatorColor = indicatorColor;
         invalidate();
     }
 
+    /**
+     * Set the banners images.
+     *
+     * @param bitmapList The list of bitmaps to use as banners.
+     */
     public void setBitmapList(List<Bitmap> bitmapList) {
         this.mBitmapList = bitmapList;
 

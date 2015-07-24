@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         banners = (Banners) findViewById(R.id.banners);
+        banners.setIndicatorColor(R.color.blue);
 
         Handler loadBannersHandler = new Handler();
         loadBannersHandler.postDelayed(new Runnable() {
