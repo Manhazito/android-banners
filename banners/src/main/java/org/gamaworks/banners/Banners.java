@@ -14,12 +14,19 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.os.AsyncTask;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -39,6 +46,7 @@ public class Banners extends View {
     private final int BACKWARD = 1;
     private final int SEEING_TIME = 5000;
 
+    private LoadBannerListener mLoadBannerListener;
     private GestureDetector mFlingDetector;
 
     private Rect currentImageRect = new Rect();
@@ -53,6 +61,8 @@ public class Banners extends View {
     private float mIndicatorXInterval;
     private Timer mChangeImageTimer;
     private Timer mAnimationTimer;
+    private boolean mNoRealBanners = true;
+    private Bitmap mDefaultBanner;
 
     private int mIndicatorColor = Color.argb(255, 102, 146, 203);
     private List<Bitmap> mBitmapList = new ArrayList<>();
@@ -60,9 +70,7 @@ public class Banners extends View {
     public Banners(final Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        mBitmapList.add(BitmapFactory.decodeResource(context.getResources(), R.drawable.no_banners));
-        mBitmapList.add(BitmapFactory.decodeResource(context.getResources(), R.drawable.no_banners));
-        mBitmapList.add(BitmapFactory.decodeResource(context.getResources(), R.drawable.no_banners));
+        mBitmapList.add(BitmapFactory.decodeResource(context.getResources(), R.drawable.banner_default));
 
         mIndicatorPaint.setStrokeWidth(2f);
         mIndicatorPaint.setColor(mIndicatorColor);
@@ -145,9 +153,7 @@ public class Banners extends View {
     protected void onSizeChanged(int w, int h, int oldW, int oldH) {
         int height = getHeight() - getPaddingTop() - getPaddingBottom();
         int width = getWidth() - getPaddingLeft() - getPaddingRight();
-        int numberOfBmp;
-
-        numberOfBmp = mBitmapList.size();
+        int numberOfBmp = mBitmapList.size();
 
         mIndicatorRadius = (height / 50);
         mIndicatorXInterval = 2 * mIndicatorRadius + 2 * mIndicatorRadius;
@@ -194,6 +200,12 @@ public class Banners extends View {
             setMeasuredDimension(measuredWidth, measuredHeight);
         } else {
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        }
+
+        if (mBitmapList != null) {
+            int numberOfBmp = mBitmapList.size();
+            int width = getWidth() - getPaddingLeft() - getPaddingRight();
+            mIndicatorStartX = (width / 2) - (numberOfBmp - 1) * mIndicatorXInterval / 2;
         }
     }
 
@@ -269,24 +281,14 @@ public class Banners extends View {
         }
 
         @Override
-        public boolean onDown(MotionEvent e) {
+        public boolean onSingleTapUp(MotionEvent e) {
+            if (mLoadBannerListener != null) mLoadBannerListener.bannerClicked(mIndex);
             return true;
         }
 
         @Override
-        public boolean onDoubleTap(MotionEvent e) {
-            return super.onDoubleTap(e);
-        }
-
-        @Override
-        public void onLongPress(MotionEvent e) {
-            super.onLongPress(e);
-        }
-
-        @Override
-        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
-                                float distanceY) {
-            return super.onScroll(e1, e2, distanceX, distanceY);
+        public boolean onDown(MotionEvent e) {
+            return true;
         }
     }
 
@@ -300,17 +302,36 @@ public class Banners extends View {
         invalidate();
     }
 
+
+    public void setDefaultBanner(Bitmap defaultBanner) {
+        if (defaultBanner == null) return;
+
+        this.mDefaultBanner = defaultBanner;
+        if (mNoRealBanners) {
+            mBitmapList.clear();
+            mBitmapList.add(mDefaultBanner);
+        }
+    }
+
+    public void clearBanners() {
+        mBitmapList.clear();
+        mBitmapList.add(mDefaultBanner);
+        mNoRealBanners = true;
+    }
+
     /**
      * Set the banners images.
      *
      * @param bitmapList The list of bitmaps to use as banners.
      */
-    public void setBitmapList(List<Bitmap> bitmapList) {
+    public synchronized void setBitmapList(List<Bitmap> bitmapList) {
         this.mBitmapList = bitmapList;
+        mNoRealBanners = false;
 
         requestLayout();
 
         if (mBitmapList.size() > 1) {
+            if (mChangeImageTimer != null) mChangeImageTimer.cancel();
             mChangeImageTimer = new Timer();
             mChangeImageTimer.scheduleAtFixedRate(new TimerTask() {
                 @Override
@@ -319,5 +340,106 @@ public class Banners extends View {
                 }
             }, SEEING_TIME, SEEING_TIME);
         }
+    }
+
+    /**
+     * Add a image to the banners.
+     *
+     * @param bitmap The bitmaps to add to banners.
+     */
+    public synchronized void addBitmap(Bitmap bitmap) {
+        if (mNoRealBanners) {
+            this.mBitmapList.clear(); // Clear default bitmap!
+            mNoRealBanners = false;
+        }
+
+        this.mBitmapList.add(bitmap);
+
+        requestLayout();
+
+        if (mBitmapList.size() > 1) {
+            if (mChangeImageTimer != null) mChangeImageTimer.cancel();
+            mChangeImageTimer = new Timer();
+            mChangeImageTimer.scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
+                    changeImage(FORWARD);
+                }
+            }, SEEING_TIME, SEEING_TIME);
+        }
+    }
+
+    /**
+     * Loads an image from the web and adds it to the banners.
+     *
+     * @param webAddress The WEB address of the image to add to banners.
+     */
+    public void loadAndAdd(final String webAddress) {
+        Handler loadBannerHandler = new Handler();
+        loadBannerHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                RetrieveBannerTask retrieveBannerTask = new RetrieveBannerTask();
+                retrieveBannerTask.execute(webAddress);
+            }
+        });
+    }
+
+    class RetrieveBannerTask extends AsyncTask<String, Void, Bitmap> {
+        String webAddress;
+        String errorMsg = "Error decoding image";
+
+        @Override
+        protected Bitmap doInBackground(String... params) {
+            try {
+                webAddress = params[0];
+                URL url = new URL(webAddress);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setDoInput(true);
+                connection.setDoOutput(false);
+                connection.connect();
+                InputStream input = connection.getInputStream();
+                return BitmapFactory.decodeStream(input);
+            } catch (OutOfMemoryError e) {
+//                e.printStackTrace();
+                errorMsg = "Out of memory";
+                return null;
+            } catch (MalformedURLException e) {
+//                e.printStackTrace();
+                errorMsg = "Malformed URL";
+                return null;
+            } catch (IOException e) {
+//                e.printStackTrace();
+                errorMsg = "Connection error";
+                return null;
+            } catch (Exception e) {
+//                e.printStackTrace();
+                errorMsg = "Unknown error";
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            if (bitmap != null) {
+                addBitmap(bitmap);
+                if (mLoadBannerListener != null) mLoadBannerListener.loadedSuccessfully(webAddress, bitmap);
+            } else {
+                if (mLoadBannerListener != null) mLoadBannerListener.loadingError(webAddress, errorMsg);
+            }
+        }
+    }
+
+
+    public void setLoadBannerListener(LoadBannerListener loadBannerListener) {
+        this.mLoadBannerListener = loadBannerListener;
+    }
+
+    public interface LoadBannerListener {
+        void loadedSuccessfully(String webAddress, Bitmap imageBmp);
+
+        void loadingError(String webAddress, String errorMsg);
+
+        void bannerClicked(int index);
     }
 }

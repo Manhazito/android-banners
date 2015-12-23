@@ -2,81 +2,54 @@ package org.gamaworks.bannersexample;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import org.gamaworks.banners.Banners;
 
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
-
-    private Banners banners;
+public class MainActivity extends AppCompatActivity implements Banners.LoadBannerListener {
+    @SuppressWarnings("unused")
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        banners = (Banners) findViewById(R.id.banners);
+        Banners banners = (Banners) findViewById(R.id.banners);
         banners.setIndicatorColor(R.color.blue);
+        banners.setLoadBannerListener(this);
+        banners.setDefaultBanner(BitmapFactory.decodeResource(getResources(), R.drawable.mobile_warrior));
 
-        Handler loadBannersHandler = new Handler();
-        loadBannersHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                RetrieveBannersTask retrieveBannersTask = new RetrieveBannersTask();
-                retrieveBannersTask.execute();
-            }
-        }, 5000);
+        List<String> urls = new ArrayList<>();
+        urls.add("http://www.nolanfans.com/wordpress/wp-content/uploads/2010/06/inception_new_banner3_large.jpg");
+        urls.add("http://www.blackfilm.com/read/wp-content/uploads/2011/04/Green-Lantern-big-banner-2.jpg");
+        urls.add("http://tweeting.com/wp-content/uploads/2012/01/Star-Wars-Facebook-Picture.jpg");
+//        urls.add("http://www.mobilab.unina.it/workshop_dd4lcci/EDCC-2010-banner-big.jpg"); // Too big...
+        urls.add("http://snag.gy/LSFfb.jpg");
+        urls.add("http://snag.gy/yNaCv.jpg");
+        urls.add("http://snag.gy/uQawi.jpg");
+
+        for (String url : urls) banners.loadAndAdd(url);
     }
 
-    private Bitmap getBitmapFromURL(String src) {
-        try {
-            URL url = new URL(src);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setDoInput(true);
-            connection.setDoOutput(false);
-            connection.connect();
-            InputStream input = connection.getInputStream();
-            return BitmapFactory.decodeStream(input);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+    @Override
+    public void loadedSuccessfully(String webAddress, Bitmap imageBmp) {
+        Log.d(TAG, "Loaded banner " + webAddress);
     }
 
-    class RetrieveBannersTask extends AsyncTask<Void, Void, List<Bitmap>> {
-
-        @Override
-        protected List<Bitmap> doInBackground(Void... params) {
-            String[] urls = new String[]{
-                    "http://snag.gy/LSFfb.jpg",
-                    "http://snag.gy/yNaCv.jpg",
-                    "http://snag.gy/uQawi.jpg"
-            };
-            List<Bitmap> bannersBmp = new ArrayList<>();
-
-            for (String url : urls) {
-                Bitmap bitmap = getBitmapFromURL(url);
-
-                if (bitmap == null) continue;
-
-                bannersBmp.add(bitmap);
-            }
-
-            return bannersBmp;
-        }
-
-        @Override
-        protected void onPostExecute(List<Bitmap> bitmaps) {
-            if (bitmaps.size() > 0) banners.setBitmapList(bitmaps);
-        }
+    @Override
+    public void loadingError(String webAddress, String errorMsg) {
+        Log.e(TAG, "Could not loaded banner " + webAddress + ": " + errorMsg);
     }
+
+    @Override
+    public void bannerClicked(int index) {
+        Log.d(TAG, "Clicked banner " + index);
+    }
+
 }
