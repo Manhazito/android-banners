@@ -54,7 +54,8 @@ public class Banners extends View {
     private int mDislocation = 0;
     private int mIndex = 0;
     private int mNextIndex = 0;
-    private final Paint mIndicatorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint mActiveIndicatorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint mInactiveIndicatorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private float mIndicatorRadius;
     private float mIndicatorY;
     private float mIndicatorStartX;
@@ -64,7 +65,8 @@ public class Banners extends View {
     private boolean mNoRealBanners = true;
     private Bitmap mDefaultBanner;
 
-    private int mIndicatorColor = Color.argb(255, 102, 146, 203);
+    private int mActiveIndicatorColor = Color.argb(255, 102, 146, 203);
+    private int mInactiveIndicatorColor = Color.argb(128, 128, 128, 128);
     private List<Bitmap> mBitmapList = new ArrayList<>();
 
     public Banners(final Context context, AttributeSet attrs) {
@@ -72,8 +74,11 @@ public class Banners extends View {
 
         mBitmapList.add(BitmapFactory.decodeResource(context.getResources(), R.drawable.banner_default));
 
-        mIndicatorPaint.setStrokeWidth(2f);
-        mIndicatorPaint.setColor(mIndicatorColor);
+        mActiveIndicatorPaint.setStrokeWidth(2f);
+        mActiveIndicatorPaint.setColor(mActiveIndicatorColor);
+
+        mInactiveIndicatorPaint.setStrokeWidth(2f);
+        mInactiveIndicatorPaint.setColor(mInactiveIndicatorColor);
 
         mFlingDetector = new GestureDetector(context, new FlingDetector());
     }
@@ -153,11 +158,14 @@ public class Banners extends View {
     protected void onSizeChanged(int w, int h, int oldW, int oldH) {
         int height = getHeight() - getPaddingTop() - getPaddingBottom();
         int width = getWidth() - getPaddingLeft() - getPaddingRight();
-        int numberOfBmp = mBitmapList.size();
+        int numberOfBmp;
 
-        mIndicatorRadius = (height / 50);
+        if (isInEditMode()) numberOfBmp = 5;
+        else numberOfBmp = mBitmapList.size();
+
+        mIndicatorRadius = (height / 30);
         mIndicatorXInterval = 2 * mIndicatorRadius + 2 * mIndicatorRadius;
-        mIndicatorY = height - 4f * mIndicatorRadius;
+        mIndicatorY = height - 2f * mIndicatorRadius;
         mIndicatorStartX = (width / 2) - (numberOfBmp - 1) * mIndicatorXInterval / 2;
     }
 
@@ -214,19 +222,24 @@ public class Banners extends View {
         super.onDraw(canvas);
 
         int numberOfBmp;
-        numberOfBmp = mBitmapList.size();
+        if (isInEditMode()) numberOfBmp = 5;
+        else numberOfBmp = mBitmapList.size();
 
         if (mBitmapList.get(mIndex) != null && mBitmapList.get(mNextIndex) != null) {
-            canvas.drawBitmap(mBitmapList.get(mIndex), null, currentImageRect, mIndicatorPaint);
-            if (numberOfBmp > 1) canvas.drawBitmap(mBitmapList.get(mNextIndex), null, nextImageRect, mIndicatorPaint);
+            canvas.drawBitmap(mBitmapList.get(mIndex), null, currentImageRect, mActiveIndicatorPaint);
+            if (numberOfBmp > 1) canvas.drawBitmap(mBitmapList.get(mNextIndex), null, nextImageRect, mActiveIndicatorPaint);
         }
 
         if (numberOfBmp > 1) {
             for (int i = 0; i < numberOfBmp; i++) {
-                if (i == mIndex) mIndicatorPaint.setStyle(Paint.Style.FILL_AND_STROKE);
-                else mIndicatorPaint.setStyle(Paint.Style.STROKE);
+                if (i == mIndex) {
+                    mActiveIndicatorPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+                    canvas.drawCircle(mIndicatorStartX + i * mIndicatorXInterval, mIndicatorY, mIndicatorRadius, mActiveIndicatorPaint);
+                } else {
+                    mInactiveIndicatorPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+                    canvas.drawCircle(mIndicatorStartX + i * mIndicatorXInterval, mIndicatorY, mIndicatorRadius, mInactiveIndicatorPaint);
+                }
 
-                canvas.drawCircle(mIndicatorStartX + i * mIndicatorXInterval, mIndicatorY, mIndicatorRadius, mIndicatorPaint);
             }
         }
     }
@@ -292,13 +305,13 @@ public class Banners extends View {
         }
     }
 
-    /**
-     * Sets the color of the banner indicators circles.
-     *
-     * @param indicatorColor The indicators color.
-     */
-    public void setIndicatorColor(int indicatorColor) {
-        this.mIndicatorColor = indicatorColor;
+    public void setActiveIndicatorColor(int indicatorColor) {
+        this.mActiveIndicatorColor = indicatorColor;
+        invalidate();
+    }
+
+    public void setInactiveIndicatorColor(int indicatorColor) {
+        this.mInactiveIndicatorColor = indicatorColor;
         invalidate();
     }
 
@@ -308,7 +321,7 @@ public class Banners extends View {
 
         this.mDefaultBanner = defaultBanner;
         if (mNoRealBanners) {
-            mBitmapList.clear();
+            mBitmapList.clear(); // Clear default bitmap!
             mBitmapList.add(mDefaultBanner);
         }
     }
